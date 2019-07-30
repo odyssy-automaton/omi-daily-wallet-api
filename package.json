@@ -1,0 +1,16 @@
+{
+	"name": "daily-wallet-api",
+	"version": "1.0.0",
+	"description": "",
+	"main": "handler.js",
+	"scripts": {
+		"mega-deploy": "serverless deploy && serverless deploy --stage prod",
+		"backfill": "node test/backfiller.js"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"crypto": "^1.0.1",
+		"dotenv": "^6.2.0"
+	}
+}

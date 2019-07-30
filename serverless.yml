@@ -1,0 +1,67 @@
+service: daily-wallet-api
+
+package:
+  exclude:
+    - test/**
+
+custom:
+  myStage: ${opt:stage, self:provider.stage}
+  myEnvironment:
+    ORIGIN:
+      prod: "*"
+      dev: "*"
+    ETHEREUM_NETWORK:
+      prod: "homestead"
+      dev: "rinkeby"
+    CONTRACT_ADDRESS:
+      prod: ""
+      dev: ""
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-east-1
+  stage: dev
+  environment:
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    ORIGIN: ${self:custom.myEnvironment.ORIGIN.${self:custom.myStage}}
+    ETHEREUM_NETWORK: ${self:custom.myEnvironment.ETHEREUM_NETWORK.${self:custom.myStage}}
+    CONTRACT_ADDRESS: ${self:custom.myEnvironment.CONTRACT_ADDRESS.${self:custom.myStage}}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  get:
+    handler: links/get.get
+    events:
+      - http:
+          path: link/{linkId}
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    LinkDynamoDbTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: linkId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tokenId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
