@@ -1,12 +1,15 @@
 "use strict";
 
+const { validAddress } = require("../util/address-auth");
 const { uuidRand, addLink } = require("../util/dyanamo-queries");
 
 module.exports.send = async (event, context) => {
   const timestamp = new Date().getTime();
   const reqData = JSON.parse(event.body);
 
-  if (!reqData || !reqData.senderAddress || !reqData.amount) {
+  const authorized = validAddress(reqData.senderAddress);
+
+  if (!reqData || !reqData.senderAddress || !reqData.amount || !authorized) {
     console.error("Validation Failed");
     return {
       statusCode: 400,
@@ -27,7 +30,7 @@ module.exports.send = async (event, context) => {
       Item: {
         linkId,
         url: `${process.env.APP_URL}?id=${linkId}`,
-        senderAddres: reqData.senderAddress,
+        senderAddress: reqData.senderAddress,
         amount: reqData.amount,
         redeemed: false,
         createdAt: timestamp
