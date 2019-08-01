@@ -9,6 +9,7 @@ const validAddress = reqAddress => {
   try {
     const address = web3.utils.toChecksumAddress(reqAddress);
     console.log(address);
+    //sdk - check device id matches account address and exists
     return true;
   } catch (e) {
     console.error("invalid ethereum address", e.message);
