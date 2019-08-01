@@ -16,6 +16,9 @@ custom:
     CONTRACT_ADDRESS:
       prod: ""
       dev: ""
+    APP_URL:
+      prod: ""
+      dev: "https://quirky-davinci-4da258.netlify.com/"
 
 provider:
   name: aws
@@ -27,6 +30,7 @@ provider:
     ORIGIN: ${self:custom.myEnvironment.ORIGIN.${self:custom.myStage}}
     ETHEREUM_NETWORK: ${self:custom.myEnvironment.ETHEREUM_NETWORK.${self:custom.myStage}}
     CONTRACT_ADDRESS: ${self:custom.myEnvironment.CONTRACT_ADDRESS.${self:custom.myStage}}
+    APP_URL: ${self:custom.myEnvironment.APP_URL.${self:custom.myStage}}
 
   iamRoleStatements:
     - Effect: Allow
@@ -41,12 +45,19 @@ provider:
         - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
 
 functions:
-  get:
-    handler: links/get.get
+  send:
+    handler: links/send.send
     events:
       - http:
-          path: link/{linkId}
-          method: get
+          path: links/send
+          method: post
+          cors: true
+  redeem:
+    handler: links/redeem.redeem
+    events:
+      - http:
+          path: links/redeem
+          method: put
           cors: true
 
 resources:
@@ -59,7 +70,7 @@ resources:
           - AttributeName: linkId
             AttributeType: S
         KeySchema:
-          - AttributeName: tokenId
+          - AttributeName: linkId
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1
