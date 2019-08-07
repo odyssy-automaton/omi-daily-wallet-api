@@ -45,12 +45,12 @@ provider:
         - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
 
 functions:
-  send:
-    handler: links/send.send
+  get:
+    handler: links/get.get
     events:
       - http:
-          path: links/send
-          method: post
+          path: links/get/{linkId}
+          method: get
           cors: true
   redeem:
     handler: links/redeem.redeem
@@ -58,6 +58,20 @@ functions:
       - http:
           path: links/redeem
           method: put
+          cors: true
+  send:
+    handler: links/send.send
+    events:
+      - http:
+          path: links/send
+          method: post
+          cors: true
+  status:
+    handler: links/status.status
+    events:
+      - http:
+          path: links/status/{linkId}/{action}
+          method: get
           cors: true
 
 resources:

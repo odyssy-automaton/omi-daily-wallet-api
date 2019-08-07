@@ -1,12 +1,15 @@
 "use strict";
 
+const { validAddress } = require("../util/address-auth");
 const { getById, updateLink } = require("../util/dyanamo-queries");
 
 module.exports.redeem = async (event, context) => {
   const timestamp = new Date().getTime();
   const reqData = JSON.parse(event.body);
 
-  if (!reqData.redeemAddress || !reqData.linkId) {
+  const authorized = validAddress(reqData.redeemAddress);
+
+  if (!reqData.redeemAddress || !reqData.linkId || !authorized) {
     console.error("Validation Failed");
     return {
       statusCode: 400,
@@ -26,8 +29,10 @@ module.exports.redeem = async (event, context) => {
       throw "link not found";
     }
 
-    if (!link.redeemed) {
-      //TODO: SKD interaction
+    const invalidRedeemer = reqData.redeemAddress === link.senderAddress;
+
+    if (!link.redeemed && !invalidRedeemer) {
+      //TODO: SDK interaction
 
       const updateParams = {
         TableName: process.env.DYNAMODB_TABLE,
@@ -54,13 +59,16 @@ module.exports.redeem = async (event, context) => {
         body: JSON.stringify(updateRes)
       };
     } else {
+      const errorMessage = invalidRedeemer
+        ? "sender and redeemer cannot be the same"
+        : "link has already been redeemed";
       return {
         statusCode: 200,
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": process.env.ORIGIN
         },
-        body: JSON.stringify({ data: "link has already been redeemed" })
+        body: JSON.stringify({ message: errorMessage })
       };
     }
   } catch (err) {
