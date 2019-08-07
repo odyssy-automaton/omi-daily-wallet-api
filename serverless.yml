@@ -1,8 +1,11 @@
-service: daily-wallet-api
+service: 
+  name: daily-wallet-api
+  awsKmsKeyArn: "arn:aws:kms:us-east-1:947598263436:key/bb08c235-5160-4745-bc4e-9c37aa991255"
 
 package:
   exclude:
     - test/**
+    - node_modules/aws-sdk/**
 
 custom:
   myStage: ${opt:stage, self:provider.stage}
@@ -19,6 +22,9 @@ custom:
     APP_URL:
       prod: ""
       dev: "https://quirky-davinci-4da258.netlify.com/"
+    TEST_SECRET:
+      prod: ""
+      dev: "AQICAHiNrBUmBQhi496ozpFzP9BrHUALq+NAyE7Xsz6gRsiz0AGsJnI1cyYl57qLnxn1FDSkAAAAbTBrBgkqhkiG9w0BBwagXjBcAgEAMFcGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM8TW0l6r7UEi1soz9AgEQgCp4Vy6sWq1W7SXXmeaz3jRL/X5ax4E2Uw3N0KGztPwv9kGK8O2Nk56tM4Q="
 
 provider:
   name: aws
@@ -31,6 +37,7 @@ provider:
     ETHEREUM_NETWORK: ${self:custom.myEnvironment.ETHEREUM_NETWORK.${self:custom.myStage}}
     CONTRACT_ADDRESS: ${self:custom.myEnvironment.CONTRACT_ADDRESS.${self:custom.myStage}}
     APP_URL: ${self:custom.myEnvironment.APP_URL.${self:custom.myStage}}
+    APP_URL: ${self:custom.myEnvironment.TEST_SECRET.${self:custom.myStage}}
 
   iamRoleStatements:
     - Effect: Allow
@@ -52,6 +59,7 @@ functions:
           path: links/get/{linkId}
           method: get
           cors: true
+
   redeem:
     handler: links/redeem.redeem
     events:
