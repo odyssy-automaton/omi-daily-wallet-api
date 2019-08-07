@@ -4,6 +4,9 @@ package:
   exclude:
     - test/**
 
+plugins:
+  - serverless-kms-secrets
+
 custom:
   myStage: ${opt:stage, self:provider.stage}
   myEnvironment:
@@ -19,6 +22,9 @@ custom:
     APP_URL:
       prod: ""
       dev: "https://quirky-davinci-4da258.netlify.com/"
+  serverless-kms-secrets:
+    secretsFile: kms-secrets.${opt:stage, self:provider.stage}.${opt:region, self:provider.region}.yml
+    kmsSecrets: ${file(kms-secrets.${opt:stage, self:provider.stage}.${opt:region, self:provider.region}.yml)}
 
 provider:
   name: aws
@@ -43,6 +49,10 @@ provider:
         - dynamodb:DeleteItem
       Resource:
         - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+    - Effect: Allow
+      Action:
+        - KMS:Decrypt
+      Resource: ${self:custom.kmsSecrets.keyArn}
 
 functions:
   send:
@@ -52,6 +62,7 @@ functions:
           path: links/send
           method: post
           cors: true
+
   redeem:
     handler: links/redeem.redeem
     events:
