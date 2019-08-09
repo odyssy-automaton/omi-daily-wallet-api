@@ -8,7 +8,7 @@ var kms = new AWS.KMS();
 const showSecret = () => {
   kms
     .decrypt({
-      CiphertextBlob: Buffer.from(process.env.TEST_SECRET, "base64")
+      CiphertextBlob: Buffer.from(process.env.OMI_PK, "base64")
     })
     .promise()
     .then(data => {

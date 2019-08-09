@@ -1,7 +1,13 @@
 "use strict";
 
 const { validAddress } = require("../util/address-auth");
-const { uuidRand, addLink } = require("../util/dyanamo-queries");
+const { uuidRand, addRecord } = require("../util/dyanamo-queries");
+const { omiPrivateKey } = require("../util/secret");
+const {
+  SdkEnvironmentNames,
+  getSdkEnvironment,
+  createSdk
+} = require("@archanova/sdk");
 
 module.exports.send = async (event, context) => {
   const timestamp = new Date().getTime();
@@ -22,31 +28,57 @@ module.exports.send = async (event, context) => {
   }
 
   try {
-    //TODO: SKD interaction
-    const linkId = await uuidRand();
+    const privateKey = await omiPrivateKey();
+    const sdkEnv = getSdkEnvironment(SdkEnvironmentNames.Xdai);
+    const sdk = new createSdk(sdkEnv);
+    await sdk.initialize({
+      device: { privateKey }
+    });
 
-    const newLinkParams = {
-      TableName: process.env.DYNAMODB_TABLE,
-      Item: {
-        linkId,
-        url: `${process.env.APP_URL}?id=${linkId}`,
-        senderAddress: reqData.senderAddress,
-        amount: reqData.amount,
-        redeemed: false,
-        createdAt: timestamp
-      }
-    };
+    // const senderAccount = await sdk.connectAccount(reqData.senderAddress);
 
-    await addLink(newLinkParams);
+    // const canSend = senderAccount && senderAccount.balance.real >= reqData.amount;
+    const canSend = true;
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": process.env.ORIGIN
-      },
-      body: JSON.stringify(newLinkParams.Item)
-    };
+    //validate good senderAccount here
+    //todo: compate bigint and amount
+    //how do we go from bigInt ot xdai amount?
+
+    if (canSend) {
+      const linkId = await uuidRand();
+
+      const newLinkParams = {
+        TableName: process.env.DYNAMODB_TABLE,
+        Item: {
+          linkId,
+          url: `${process.env.APP_URL}?id=${linkId}`,
+          senderAddress: reqData.senderAddress,
+          amount: reqData.amount,
+          redeemed: false,
+          createdAt: timestamp
+        }
+      };
+
+      await addRecord(newLinkParams);
+
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": process.env.ORIGIN
+        },
+        body: JSON.stringify(newLinkParams.Item)
+      };
+    } else {
+      return {
+        statusCode: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": process.env.ORIGIN
+        },
+        body: JSON.stringify({ error: "Balance is less than send amount" })
+      };
+    }
   } catch (err) {
     console.log(err);
     return {

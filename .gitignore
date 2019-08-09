@@ -4,6 +4,7 @@ jspm_packages
 
 .env
 .ops.md 
+addresses/
 
 # Serverless directories
 .serverless

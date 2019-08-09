@@ -1,11 +1,17 @@
-service: 
+service:
   name: daily-wallet-api
   awsKmsKeyArn: "arn:aws:kms:us-east-1:947598263436:key/bb08c235-5160-4745-bc4e-9c37aa991255"
 
+plugins:
+  - serverless-plugin-include-dependencies
+
 package:
+  excludeDevDependencies: true
   exclude:
     - test/**
+    - jobs/**
     - node_modules/aws-sdk/**
+    - node_modules/**
 
 custom:
   myStage: ${opt:stage, self:provider.stage}
@@ -22,9 +28,9 @@ custom:
     APP_URL:
       prod: ""
       dev: "https://quirky-davinci-4da258.netlify.com/"
-    TEST_SECRET:
+    OMI_PK:
       prod: ""
-      dev: "AQICAHj9VHz1y9MMZLBS9T+EozoW8IrZNrawGIGC2VxP6G+V1AFTv7PHBISkShV97Qi3bbJCAAAAdzB1BgkqhkiG9w0BBwagaDBmAgEAMGEGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMyxUZ5K/2EG4vTMCkAgEQgDQXYQP4P5LBB7rzqLDu6gwbZbADPKNK+MxKn7t6pC6guwyGya45bIzKk3gj0nARP58TjHIF"
+      dev: "AQICAHj9VHz1y9MMZLBS9T+EozoW8IrZNrawGIGC2VxP6G+V1AF4IAURHxO4tQqSscFWCZTgAAAApDCBoQYJKoZIhvcNAQcGoIGTMIGQAgEAMIGKBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDEvQtg7MUYnbKgB/eQIBEIBdbh6vWnme7DK6phlQEIXAMcSNKxSIECqTInGE67VhPt93qLNEuMNpqLze0Vb23e2dj7a8Qym5YiWJBOfcLALNyAk41i9FMabdWKT8UZ1oXWZuhb2gvycOP1ERi1S/"
 
 provider:
   name: aws
@@ -33,11 +39,12 @@ provider:
   stage: dev
   environment:
     DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    DYNAMODB_ACCOUNT_TABLE: ${self:service}-accounts-${opt:stage, self:provider.stage}
     ORIGIN: ${self:custom.myEnvironment.ORIGIN.${self:custom.myStage}}
     ETHEREUM_NETWORK: ${self:custom.myEnvironment.ETHEREUM_NETWORK.${self:custom.myStage}}
     CONTRACT_ADDRESS: ${self:custom.myEnvironment.CONTRACT_ADDRESS.${self:custom.myStage}}
     APP_URL: ${self:custom.myEnvironment.APP_URL.${self:custom.myStage}}
-    APP_URL: ${self:custom.myEnvironment.TEST_SECRET.${self:custom.myStage}}
+    OMI_PK: ${self:custom.myEnvironment.OMI_PK.${self:custom.myStage}}
 
   iamRoleStatements:
     - Effect: Allow
@@ -50,8 +57,23 @@ provider:
         - dynamodb:DeleteItem
       Resource:
         - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_ACCOUNT_TABLE}"
 
 functions:
+  signup:
+    handler: links/signup.signup
+    events:
+      - http:
+          path: links/signup
+          method: post
+          cors: true
+  signupTest:
+    handler: links/signup-test.signupTest
+    events:
+      - http:
+          path: links/signup-test
+          method: post
+          cors: true
   get:
     handler: links/get.get
     events:
@@ -74,13 +96,6 @@ functions:
           path: links/send
           method: post
           cors: true
-  status:
-    handler: links/status.status
-    events:
-      - http:
-          path: links/status/{linkId}/{action}
-          method: get
-          cors: true
 
 resources:
   Resources:
@@ -98,3 +113,17 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.DYNAMODB_TABLE}
+    AccountDynamoDbTable:
+      Type: "AWS::DynamoDB::Table"
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: accountAddress
+            AttributeType: S
+        KeySchema:
+          - AttributeName: accountAddress
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.DYNAMODB_ACCOUNT_TABLE}

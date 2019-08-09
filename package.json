@@ -10,9 +10,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.505.0",
+    "@archanova/sdk": "^1.1.0",
     "axios": "^0.19.0",
     "dotenv": "^8.0.0",
-    "web3": "^1.2.0"
+    "ethers": "^4.0.33",
+    "web3": "^1.2.1"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.505.0",
+    "serverless-plugin-include-dependencies": "^3.2.1",
+    "shortid": "^2.2.14"
   }
 }

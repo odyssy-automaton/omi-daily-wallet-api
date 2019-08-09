@@ -5,62 +5,134 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const crypto = require("crypto");
 
 const uuidRand = function() {
-	return crypto.randomBytes(16).toString("hex");
+  return crypto.randomBytes(16).toString("hex");
 };
 
-const getById = function(linkId) {
-	const params = {
-		TableName: process.env.DYNAMODB_TABLE,
-		KeyConditionExpression: "linkId = :hkey",
-		ExpressionAttributeValues: {
-			":hkey": linkId
-		}
-	};
+const getLinkById = function(linkId) {
+  const params = {
+    TableName: process.env.DYNAMODB_TABLE,
+    KeyConditionExpression: "linkId = :hkey",
+    ExpressionAttributeValues: {
+      ":hkey": linkId
+    }
+  };
 
-	return new Promise((res, rej) => {
-		dynamoDb.query(params, function(err, data) {
-			if (err) {
-				console.log("Error", err);
-				rej(err);
-			} else {
-				console.log("Success", data);
-				res(data);
-			}
-		});
-	});
+  return new Promise((res, rej) => {
+    dynamoDb.query(params, function(err, data) {
+      if (err) {
+        console.log("Error", err);
+        rej(err);
+      } else {
+        console.log("Success", data);
+        res(data);
+      }
+    });
+  });
 };
 
-const addLink = function(params) {
-	return new Promise((res, rej) => {
-		dynamoDb.put(params, function(err, data) {
-			if (err) {
-				console.log("Error", err);
-				rej(err);
-			} else {
-				console.log("Success", data);
-				res(data);
-			}
-		});
-	});
+const getAccountById = function(accountAddress) {
+  const params = {
+    TableName: process.env.DYNAMODB_ACCOUNT_TABLE,
+    KeyConditionExpression: "accountAddress = :hkey",
+    ExpressionAttributeValues: {
+      ":hkey": accountAddress
+    }
+  };
+
+  return new Promise((res, rej) => {
+    dynamoDb.query(params, function(err, data) {
+      if (err) {
+        console.log("Error", err);
+        rej(err);
+      } else {
+        console.log("Success", data);
+        res(data);
+      }
+    });
+  });
 };
 
-const updateLink = function(params) {
-	return new Promise((res, rej) => {
-		dynamoDb.update(params, function(err, data) {
-			if (err) {
-				console.log("Error", err);
-				rej(err);
-			} else {
-				console.log("Success", data);
-				res(data);
-			}
-		});
-	});
+const addRecord = function(params) {
+  return new Promise((res, rej) => {
+    dynamoDb.put(params, function(err, data) {
+      if (err) {
+        console.log("Error", err);
+        rej(err);
+      } else {
+        console.log("Success", data);
+        res(data);
+      }
+    });
+  });
+};
+
+const updateRecord = function(params) {
+  return new Promise((res, rej) => {
+    dynamoDb.update(params, function(err, data) {
+      if (err) {
+        console.log("Error", err);
+        rej(err);
+      } else {
+        res(data);
+      }
+    });
+  });
+};
+
+const getUnclaimedAccounts = function() {
+  const params = {
+    TableName: process.env.DYNAMODB_ACCOUNT_TABLE,
+    FilterExpression: "#claimed = :claimed",
+    ExpressionAttributeNames: {
+      "#claimed": "claimed"
+    },
+    ExpressionAttributeValues: {
+      ":claimed": false
+    }
+  };
+
+  return new Promise((res, rej) => {
+    dynamoDb.scan(params, function(err, data) {
+      if (err) {
+        console.log("Error", err);
+        rej(err);
+      } else {
+        res(data);
+      }
+    });
+  });
+};
+
+const getClaimedAccounts = function() {
+  const params = {
+    TableName: process.env.DYNAMODB_ACCOUNT_TABLE,
+    FilterExpression: "#claimed = :claimed",
+    ExpressionAttributeNames: {
+      "#claimed": "claimed"
+    },
+    ExpressionAttributeValues: {
+      ":claimed": true
+    }
+  };
+
+  return new Promise((res, rej) => {
+    dynamoDb.scan(params, function(err, data) {
+      if (err) {
+        console.log("Error", err);
+        rej(err);
+      } else {
+        res(data);
+      }
+    });
+  });
 };
 
 module.exports = {
-	uuidRand,
-	getById,
-	addLink,
-	updateLink
+  uuidRand,
+  getAccountById,
+  getLinkById,
+  addRecord,
+  updateRecord,
+  getUnclaimedAccounts,
+  getClaimedAccounts
 };

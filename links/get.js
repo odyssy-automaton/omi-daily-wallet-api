@@ -1,10 +1,10 @@
 "use strict";
 
-const { getById } = require("../util/dyanamo-queries");
+const { getByLinkId } = require("../util/dyanamo-queries");
 
 module.exports.get = async (event, context) => {
   try {
-    const getRes = await getById(event.pathParameters.linkId);
+    const getRes = await getByLinkId(event.pathParameters.linkId);
     const link = getRes.Items[0];
 
     const linkRes = {
