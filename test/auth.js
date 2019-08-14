@@ -4,7 +4,7 @@ const test = address => {
   return validAddress(address);
 };
 
-const addr = "0xD662C44e9f1EF99D05877c7cD5142C5A91A9f4c7";
+const addr = "0x1419dba6141fc497FD69A66a6cb45bA57949D55f";
 const res = test(addr);
 
 console.log(res);

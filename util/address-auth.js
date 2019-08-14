@@ -1,14 +1,10 @@
 "use strict";
 
-var Web3 = require("web3");
-const web3 = new Web3(Web3.givenProvider || "ws://localhost:8546");
+const { ethers } = require("ethers");
 
 const validAddress = reqAddress => {
-  console.log(reqAddress);
-
   try {
-    const address = web3.utils.toChecksumAddress(reqAddress);
-    console.log(address);
+    ethers.utils.getAddress(reqAddress);
     return true;
   } catch (e) {
     console.error("invalid ethereum address", e.message);

@@ -6,11 +6,11 @@ plugins:
   - serverless-plugin-include-dependencies
 
 package:
-  excludeDevDependencies: true
+  excludeDevDependencies: false
   exclude:
     - test/**
     - jobs/**
-    - node_modules/aws-sdk/**
+    - addresses/**
     - node_modules/**
 
 custom:
@@ -19,12 +19,9 @@ custom:
     ORIGIN:
       prod: "*"
       dev: "*"
-    ETHEREUM_NETWORK:
-      prod: "homestead"
-      dev: "rinkeby"
-    CONTRACT_ADDRESS:
+    OMI_ADDRESS:
       prod: ""
-      dev: ""
+      dev: "0x962E624dCfA8CfB220015A5292C15d4006c42a85"
     APP_URL:
       prod: ""
       dev: "https://quirky-davinci-4da258.netlify.com/"
@@ -41,8 +38,7 @@ provider:
     DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
     DYNAMODB_ACCOUNT_TABLE: ${self:service}-accounts-${opt:stage, self:provider.stage}
     ORIGIN: ${self:custom.myEnvironment.ORIGIN.${self:custom.myStage}}
-    ETHEREUM_NETWORK: ${self:custom.myEnvironment.ETHEREUM_NETWORK.${self:custom.myStage}}
-    CONTRACT_ADDRESS: ${self:custom.myEnvironment.CONTRACT_ADDRESS.${self:custom.myStage}}
+    OMI_ADDRESS: ${self:custom.myEnvironment.OMI_ADDRESS.${self:custom.myStage}}
     APP_URL: ${self:custom.myEnvironment.APP_URL.${self:custom.myStage}}
     OMI_PK: ${self:custom.myEnvironment.OMI_PK.${self:custom.myStage}}
 
@@ -65,13 +61,6 @@ functions:
     events:
       - http:
           path: links/signup
-          method: post
-          cors: true
-  signupTest:
-    handler: links/signup-test.signupTest
-    events:
-      - http:
-          path: links/signup-test
           method: post
           cors: true
   get:

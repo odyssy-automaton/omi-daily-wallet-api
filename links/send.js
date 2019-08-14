@@ -28,21 +28,16 @@ module.exports.send = async (event, context) => {
   }
 
   try {
-    const privateKey = await omiPrivateKey();
+    const guardianPK = await omiPrivateKey();
     const sdkEnv = getSdkEnvironment(SdkEnvironmentNames.Xdai);
     const sdk = new createSdk(sdkEnv);
-    await sdk.initialize({
-      device: { privateKey }
-    });
+    await sdk.initialize({ device: { privateKey: guardianPK } });
 
-    // const senderAccount = await sdk.connectAccount(reqData.senderAddress);
+    const senderAccount = await sdk.connectAccount(reqData.senderAddress);
 
     // const canSend = senderAccount && senderAccount.balance.real >= reqData.amount;
+    // need to figure out the comparison
     const canSend = true;
-
-    //validate good senderAccount here
-    //todo: compate bigint and amount
-    //how do we go from bigInt ot xdai amount?
 
     if (canSend) {
       const linkId = await uuidRand();
