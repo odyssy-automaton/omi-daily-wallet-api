@@ -1,12 +1,5 @@
 "use strict";
 
-// require("dotenv").config();
-// const AWS = require("aws-sdk");
-// var credentials = new AWS.SharedIniFileCredentials({ profile: "default" });
-// AWS.config.credentials = credentials;
-// AWS.config.update({ region: "us-east-1" });
-// const kms = new AWS.KMS();
-
 const {
   SdkEnvironmentNames,
   getSdkEnvironment,
@@ -42,7 +35,7 @@ module.exports.signup = async (event, context) => {
   try {
     const claimedAccounts = await getClaimedAccounts();
     const deviceAssigned = claimedAccounts.Items.find(account => {
-      account.appDeviceId == reqData.userDeviceAddress;
+      return account.appDeviceId == reqData.userDeviceAddress;
     });
 
     if (deviceAssigned) {
@@ -56,13 +49,11 @@ module.exports.signup = async (event, context) => {
       };
     }
 
-    const privateKey = await omiPrivateKey();
+    const guardianPK = await omiPrivateKey();
     const sdkEnv = getSdkEnvironment(SdkEnvironmentNames.Sokol);
     const sdk = new createSdk(sdkEnv);
 
-    await sdk.initialize({
-      device: { privateKey }
-    });
+    await sdk.initialize({ device: { privateKey: guardianPK } });
 
     const unclaimedAccounts = await getUnclaimedAccounts();
     const account = unclaimedAccounts.Items[0];
@@ -72,37 +63,46 @@ module.exports.signup = async (event, context) => {
       console.log("connectRes");
       console.log(connectRes);
 
-      const deviceRes = await sdk.createAccountDevice(
-        reqData.userDeviceAddress
-      );
-      console.log(deviceRes);
+      if (connectRes) {
+        const deviceRes = await sdk.createAccountDevice(
+          reqData.userDeviceAddress
+        );
+        console.log(deviceRes);
 
-      const updateParams = {
-        TableName: process.env.DYNAMODB_ACCOUNT_TABLE,
-        Key: {
-          accountAddress: account.accountAddress
-        },
-        ExpressionAttributeValues: {
-          ":claimed": true,
-          ":appDeviceId": reqData.userDeviceAddress,
-          ":updatedAt": timestamp
-        },
-        UpdateExpression: `SET claimed = :claimed, appDeviceId = :appDeviceId, updatedAt = :updatedAt`,
-        ReturnValues: "ALL_NEW"
-      };
+        const updateParams = {
+          TableName: process.env.DYNAMODB_ACCOUNT_TABLE,
+          Key: {
+            accountAddress: account.accountAddress
+          },
+          ExpressionAttributeValues: {
+            ":claimed": true,
+            ":appDeviceId": reqData.userDeviceAddress,
+            ":updatedAt": timestamp
+          },
+          UpdateExpression: `SET claimed = :claimed, appDeviceId = :appDeviceId, updatedAt = :updatedAt`,
+          ReturnValues: "ALL_NEW"
+        };
 
-      const updateRes = await updateRecord(updateParams);
-      console.log("updateRes");
-      console.log(updateRes);
+        await updateRecord(updateParams);
 
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": process.env.ORIGIN
-        },
-        body: JSON.stringify(account)
-      };
+        return {
+          statusCode: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": process.env.ORIGIN
+          },
+          body: JSON.stringify(account)
+        };
+      } else {
+        return {
+          statusCode: 400,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": process.env.ORIGIN
+          },
+          body: JSON.stringify({ error: "No connection" })
+        };
+      }
     } else {
       return {
         statusCode: 400,
