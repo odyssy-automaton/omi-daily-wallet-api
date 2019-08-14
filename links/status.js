@@ -12,8 +12,7 @@ module.exports.status = async (event, context) => {
     const txHash = action === "send" ? link.sendTx : link.redeemTx;
     const status = await txStatus(txHash);
 
-    //if status === 'success'
-    // update the recortd
+    //if status === 'success', update the recortd
 
     if (status === "success") {
       const updateParams = {
@@ -41,7 +40,7 @@ module.exports.status = async (event, context) => {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": process.env.ORIGIN
         },
-        body: JSON.stringify(linkRes)
+        body: JSON.stringify(statusRes)
       };
     } else {
       return {
