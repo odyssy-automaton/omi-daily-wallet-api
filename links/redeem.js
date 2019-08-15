@@ -12,11 +12,11 @@ const {
   getSdkEnvironment,
   createSdk
 } = require("@archanova/sdk");
-const ethToWei = require("@netgum/utils");
 const { ethers } = require("ethers");
+const { anyToHex, ethToWei } = require("@netgum/utils");
 
 const { validAddress } = require("../util/address-auth");
-const { getById, updateRecord } = require("../util/dyanamo-queries");
+const { getLinkById, updateRecord } = require("../util/dyanamo-queries");
 const { omiPrivateKey } = require("../util/secret");
 
 module.exports.redeem = async (event, context) => {
@@ -38,9 +38,8 @@ module.exports.redeem = async (event, context) => {
   }
 
   try {
-    const getRes = await getById(reqData.linkId);
+    const getRes = await getLinkById(reqData.linkId);
     const link = getRes.Items[0];
-    console.log("link", link);
 
     if (!link) {
       throw "link not found";
@@ -64,10 +63,9 @@ module.exports.redeem = async (event, context) => {
 
     await sdk.initialize({ device: { privateKey: guardianPK } });
 
-    //is the sender === OMI
-    if (link.senderAccount === process.env.OMI_WALLET) {
+    if (link.senderAddress === process.env.OMI_ADDRESS) {
       let gasPrice = 1000000000;
-      let gasLimit = 21000;
+      let gasLimit = 25000;
       let wei = ethers.utils.parseEther(link.amount);
 
       let txRes = await guardian.sendTransaction({
@@ -77,11 +75,24 @@ module.exports.redeem = async (event, context) => {
         value: wei
       });
 
-      console.log.log("txRes");
-      console.log.log(txRes);
+      let updateParams = {
+        TableName: process.env.DYNAMODB_TABLE,
+        Key: {
+          linkId: reqData.linkId
+        },
+        ExpressionAttributeValues: {
+          ":redeemed": true,
+          ":redeemAddress": reqData.redeemAddress,
+          ":txHash": txRes.hash,
+          ":updatedAt": timestamp
+        },
+        UpdateExpression: `SET redeemed = :redeemed, redeemAddress = :redeemAddress, txHash = :txHash, updatedAt = :updatedAt`,
+        ReturnValues: "ALL_NEW"
+      };
+
+      await updateRecord(updateParams);
     } else {
       const senderAccount = await sdk.connectAccount(link.senderAddress);
-
       // TODO: const hasBalance = senderAccount.balance.real >= link.amount;
       const hasBalance = true;
 
@@ -94,12 +105,10 @@ module.exports.redeem = async (event, context) => {
         ethToWei(link.amount),
         null
       );
-      console.log("estimate");
-      console.log(estimate);
 
       let gasPrice = 1000000000;
-      let gasLimit = 21000;
-      let wei = ethers.utils.parseEther(estimate.totalGas);
+      let gasLimit = 25000;
+      let wei = `0x${anyToHex(estimate.totalGas)}`;
 
       await guardian.sendTransaction({
         gasLimit: gasLimit,
@@ -111,27 +120,24 @@ module.exports.redeem = async (event, context) => {
       setTimeout(async () => {
         const txRes = await sdk.submitAccountTransaction(estimate);
 
-        console.log("sdkTxRes");
-        console.log(txRes);
-        console.log("sent transaction from sender to redeemer");
-      }, 15000);
+        const updateParams = {
+          TableName: process.env.DYNAMODB_TABLE,
+          Key: {
+            linkId: reqData.linkId
+          },
+          ExpressionAttributeValues: {
+            ":redeemed": true,
+            ":redeemAddress": reqData.redeemAddress,
+            ":txHash": txRes,
+            ":updatedAt": timestamp
+          },
+          UpdateExpression: `SET redeemed = :redeemed, redeemAddress = :redeemAddress, txHash = :txHash, updatedAt = :updatedAt`,
+          ReturnValues: "ALL_NEW"
+        };
+
+        await updateRecord(updateParams);
+      }, 10000);
     }
-
-    const updateParams = {
-      TableName: process.env.DYNAMODB_TABLE,
-      Key: {
-        linkId: reqData.linkId
-      },
-      ExpressionAttributeValues: {
-        ":redeemed": true,
-        ":redeemAddress": reqData.redeemAddress,
-        ":updatedAt": timestamp
-      },
-      UpdateExpression: `SET redeemed = :redeemed, redeemAddress = :redeemAddress, updatedAt = :updatedAt`,
-      ReturnValues: "ALL_NEW"
-    };
-
-    await updateRecord(updateParams);
 
     return {
       statusCode: 200,
@@ -140,8 +146,7 @@ module.exports.redeem = async (event, context) => {
         "Access-Control-Allow-Origin": process.env.ORIGIN
       },
       body: JSON.stringify({
-        success: "transaction started",
-        tx: txRes
+        success: "transaction started"
       })
     };
   } catch (err) {
