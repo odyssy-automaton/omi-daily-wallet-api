@@ -1,7 +1,11 @@
 "use strict";
 
 const AWS = require("aws-sdk");
-const kms = new AWS.KMS();
+
+///remove before DEPLOY
+// var credentials = new AWS.SharedIniFileCredentials({ profile: "default" });
+// AWS.config.credentials = credentials;
+// AWS.config.update({ region: "us-east-1" });
 
 const {
   SdkEnvironmentNames,
@@ -36,6 +40,7 @@ module.exports.redeem = async (event, context) => {
   try {
     const getRes = await getById(reqData.linkId);
     const link = getRes.Items[0];
+    console.log("link", link);
 
     if (!link) {
       throw "link not found";
@@ -59,51 +64,57 @@ module.exports.redeem = async (event, context) => {
 
     await sdk.initialize({ device: { privateKey: guardianPK } });
 
-    const senderAccount = await sdk.connectAccount(link.senderAddress);
-
-    // TODO: const hasBalance = senderAccount.balance.real >= link.amount;
-    const hasBalance = true;
-
-    if (!hasBalance) {
-      throw "sender balance too low";
-    }
-
-    const estimate = await sdk.estimateAccountTransaction(
-      reqData.redeemAddress,
-      ethToWei(link.amount),
-      null
-    );
-
-    if (link.senderAccount !== process.env.OMI_WALLET) {
-      // send gas from OMI hot to alice
-      // send to bob
-
-      let gasPrice = 1000000000;
-      let gasLimit = 21000;
-      let wei = ethers.utils.parseEther("0.01");
-
-      await guardian.sendTransaction({
-        gasLimit: gasLimit,
-        gasPrice: gasPrice,
-        to: account.address,
-        value: wei
-      });
-
-      setTimeout(async () => {
-        await sdk.submitAccountTransaction(estimate);
-        console.log("sent transaction from sender to redeemer");
-      }, 15000);
-    } else {
+    //is the sender === OMI
+    if (link.senderAccount === process.env.OMI_WALLET) {
       let gasPrice = 1000000000;
       let gasLimit = 21000;
       let wei = ethers.utils.parseEther(link.amount);
 
+      let txRes = await guardian.sendTransaction({
+        gasLimit: gasLimit,
+        gasPrice: gasPrice,
+        to: reqData.redeemAddress,
+        value: wei
+      });
+
+      console.log.log("txRes");
+      console.log.log(txRes);
+    } else {
+      const senderAccount = await sdk.connectAccount(link.senderAddress);
+
+      // TODO: const hasBalance = senderAccount.balance.real >= link.amount;
+      const hasBalance = true;
+
+      if (!hasBalance) {
+        throw "sender balance too low";
+      }
+
+      const estimate = await sdk.estimateAccountTransaction(
+        reqData.redeemAddress,
+        ethToWei(link.amount),
+        null
+      );
+      console.log("estimate");
+      console.log(estimate);
+
+      let gasPrice = 1000000000;
+      let gasLimit = 21000;
+      let wei = ethers.utils.parseEther(estimate.totalGas);
+
       await guardian.sendTransaction({
         gasLimit: gasLimit,
         gasPrice: gasPrice,
-        to: account.address,
+        to: link.senderAddress,
         value: wei
       });
+
+      setTimeout(async () => {
+        const txRes = await sdk.submitAccountTransaction(estimate);
+
+        console.log("sdkTxRes");
+        console.log(txRes);
+        console.log("sent transaction from sender to redeemer");
+      }, 15000);
     }
 
     const updateParams = {
@@ -114,10 +125,9 @@ module.exports.redeem = async (event, context) => {
       ExpressionAttributeValues: {
         ":redeemed": true,
         ":redeemAddress": reqData.redeemAddress,
-        ":txHash": txHash,
         ":updatedAt": timestamp
       },
-      UpdateExpression: `SET redeemed = :redeemed, redeemAddress = :redeemAddress, txHash = :txHash, updatedAt = :updatedAt`,
+      UpdateExpression: `SET redeemed = :redeemed, redeemAddress = :redeemAddress, updatedAt = :updatedAt`,
       ReturnValues: "ALL_NEW"
     };
 
@@ -129,7 +139,10 @@ module.exports.redeem = async (event, context) => {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": process.env.ORIGIN
       },
-      body: JSON.stringify(updateRes)
+      body: JSON.stringify({
+        success: "transaction started",
+        tx: txRes
+      })
     };
   } catch (err) {
     console.log(err);

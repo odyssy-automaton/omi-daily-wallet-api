@@ -1,11 +1,15 @@
 "use strict";
 
-const { getByLinkId } = require("../util/dyanamo-queries");
+const { getLinkById } = require("../util/dyanamo-queries");
 
 module.exports.get = async (event, context) => {
   try {
-    const getRes = await getByLinkId(event.pathParameters.linkId);
+    const getRes = await getLinkById(event.pathParameters.linkId);
     const link = getRes.Items[0];
+
+    if (!link) {
+      throw "invalid link";
+    }
 
     const linkRes = {
       linkId: link.linkId,
@@ -13,25 +17,14 @@ module.exports.get = async (event, context) => {
       amount: link.amount
     };
 
-    if (link) {
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": process.env.ORIGIN
-        },
-        body: JSON.stringify(linkRes)
-      };
-    } else {
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": process.env.ORIGIN
-        },
-        body: JSON.stringify({ message: "invalid link" })
-      };
-    }
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": process.env.ORIGIN
+      },
+      body: JSON.stringify(linkRes)
+    };
   } catch (err) {
     console.log(err);
     return {
