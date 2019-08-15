@@ -23,7 +23,6 @@ const getLinkById = function(linkId) {
         console.log("Error", err);
         rej(err);
       } else {
-        console.log("Success", data);
         res(data);
       }
     });
@@ -45,7 +44,6 @@ const getAccountById = function(accountAddress) {
         console.log("Error", err);
         rej(err);
       } else {
-        console.log("Success", data);
         res(data);
       }
     });
@@ -59,7 +57,6 @@ const addRecord = function(params) {
         console.log("Error", err);
         rej(err);
       } else {
-        console.log("Success", data);
         res(data);
       }
     });
