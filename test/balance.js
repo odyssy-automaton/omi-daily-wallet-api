@@ -11,7 +11,7 @@ const { getLinkById } = require("../util/dyanamo-queries");
 
 const test = async () => {
   const provider = new ethers.providers.JsonRpcProvider(
-    "https://sokol.poa.network/"
+    process.env.POA_NETWORK
   );
   const address = "0x5c52e30d8612d4087dd362467a67cb6dd58b52e4";
   const balance = await provider.getBalance(address);

@@ -20,13 +20,16 @@ custom:
       prod: "*"
       dev: "*"
     OMI_ADDRESS:
-      prod: ""
+      prod: "0x962E624dCfA8CfB220015A5292C15d4006c42a85"
       dev: "0x962E624dCfA8CfB220015A5292C15d4006c42a85"
     APP_URL:
-      prod: ""
+      prod: "https://omi-daily-wallet.odyssy.io/"
       dev: "https://quirky-davinci-4da258.netlify.com/"
+    POA_NETWORK:
+      prod: "https://dai.poa.network/"
+      dev: "https://sokol.poa.network/"
     OMI_PK:
-      prod: ""
+      prod: "AQICAHj9VHz1y9MMZLBS9T+EozoW8IrZNrawGIGC2VxP6G+V1AF4IAURHxO4tQqSscFWCZTgAAAApDCBoQYJKoZIhvcNAQcGoIGTMIGQAgEAMIGKBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDEvQtg7MUYnbKgB/eQIBEIBdbh6vWnme7DK6phlQEIXAMcSNKxSIECqTInGE67VhPt93qLNEuMNpqLze0Vb23e2dj7a8Qym5YiWJBOfcLALNyAk41i9FMabdWKT8UZ1oXWZuhb2gvycOP1ERi1S/"
       dev: "AQICAHj9VHz1y9MMZLBS9T+EozoW8IrZNrawGIGC2VxP6G+V1AF4IAURHxO4tQqSscFWCZTgAAAApDCBoQYJKoZIhvcNAQcGoIGTMIGQAgEAMIGKBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDEvQtg7MUYnbKgB/eQIBEIBdbh6vWnme7DK6phlQEIXAMcSNKxSIECqTInGE67VhPt93qLNEuMNpqLze0Vb23e2dj7a8Qym5YiWJBOfcLALNyAk41i9FMabdWKT8UZ1oXWZuhb2gvycOP1ERi1S/"
 
 provider:
@@ -41,6 +44,7 @@ provider:
     OMI_ADDRESS: ${self:custom.myEnvironment.OMI_ADDRESS.${self:custom.myStage}}
     APP_URL: ${self:custom.myEnvironment.APP_URL.${self:custom.myStage}}
     OMI_PK: ${self:custom.myEnvironment.OMI_PK.${self:custom.myStage}}
+    POA_NETWORK: ${self:custom.myEnvironment.POA_NETWORK.${self:custom.myStage}}
 
   iamRoleStatements:
     - Effect: Allow

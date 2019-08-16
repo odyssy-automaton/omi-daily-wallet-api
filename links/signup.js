@@ -50,7 +50,7 @@ module.exports.signup = async (event, context) => {
     }
 
     const guardianPK = await omiPrivateKey();
-    const sdkEnv = getSdkEnvironment(SdkEnvironmentNames.Sokol);
+    const sdkEnv = getSdkEnvironment(SdkEnvironmentNames[process.env.SDK_ENV]);
     const sdk = new createSdk(sdkEnv);
 
     await sdk.initialize({ device: { privateKey: guardianPK } });

@@ -29,10 +29,10 @@ module.exports.batchDeploy = async (event, context) => {
     const guardianPK = String(decryptedData.Plaintext);
 
     const provider = new ethers.providers.JsonRpcProvider(
-      "https://sokol.poa.network/"
+      process.env.POA_NETWORK
     );
     const guardian = new ethers.Wallet(guardianPK, provider);
-    const sdk = createSdk(getSdkEnvironment(SdkEnvironmentNames.Sokol));
+    const sdk = createSdk(getSdkEnvironment(SdkEnvironmentNames[process.env.SDK_ENV]));
 
     for (let count = 0; count < event.count; count++) {
       await sdk.initialize({ device: { privateKey: guardianPK } });

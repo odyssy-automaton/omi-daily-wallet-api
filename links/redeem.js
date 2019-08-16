@@ -53,7 +53,7 @@ module.exports.redeem = async (event, context) => {
     }
 
     const provider = new ethers.providers.JsonRpcProvider(
-      "https://sokol.poa.network/"
+      process.env.POA_NETWORK
     );
 
     const balance = await provider.getBalance(address);
@@ -65,7 +65,7 @@ module.exports.redeem = async (event, context) => {
 
     const guardianPK = await omiPrivateKey();
     const guardian = new ethers.Wallet(guardianPK, provider);
-    const sdkEnv = getSdkEnvironment(SdkEnvironmentNames.Sokol);
+    const sdkEnv = getSdkEnvironment(SdkEnvironmentNames[process.env.SDK_ENV]);
     const sdk = new createSdk(sdkEnv);
 
     await sdk.initialize({ device: { privateKey: guardianPK } });

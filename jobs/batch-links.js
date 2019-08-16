@@ -6,29 +6,23 @@ AWS.config.update({ region: "us-east-1" });
 
 const { send } = require("../links/send");
 
-const batchLinks = count => {
+const batchLinks = async count => {
   try {
     let req = {
       body: JSON.stringify({
-        amount: ".01",
+        amount: ".1",
         senderAddress: process.env.OMI_ADDRESS
       })
     };
 
     for (let i = 0; i < count; i++) {
-      send(req);
+      await send(req);
     }
 
-    return {
-      statusCode: 200,
-      body: "ok"
-    };
+    process.exit();
   } catch (err) {
     console.log(err);
-    return {
-      statusCode: 400,
-      body: err
-    };
+    process.exit();
   }
 };
 
