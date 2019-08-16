@@ -28,6 +28,9 @@ custom:
     POA_NETWORK:
       prod: "https://dai.poa.network/"
       dev: "https://sokol.poa.network/"
+    SDK_ENV:
+      prod: "Xdai"
+      dev: "Sokol"
     OMI_PK:
       prod: "AQICAHj9VHz1y9MMZLBS9T+EozoW8IrZNrawGIGC2VxP6G+V1AF4IAURHxO4tQqSscFWCZTgAAAApDCBoQYJKoZIhvcNAQcGoIGTMIGQAgEAMIGKBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDEvQtg7MUYnbKgB/eQIBEIBdbh6vWnme7DK6phlQEIXAMcSNKxSIECqTInGE67VhPt93qLNEuMNpqLze0Vb23e2dj7a8Qym5YiWJBOfcLALNyAk41i9FMabdWKT8UZ1oXWZuhb2gvycOP1ERi1S/"
       dev: "AQICAHj9VHz1y9MMZLBS9T+EozoW8IrZNrawGIGC2VxP6G+V1AF4IAURHxO4tQqSscFWCZTgAAAApDCBoQYJKoZIhvcNAQcGoIGTMIGQAgEAMIGKBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDEvQtg7MUYnbKgB/eQIBEIBdbh6vWnme7DK6phlQEIXAMcSNKxSIECqTInGE67VhPt93qLNEuMNpqLze0Vb23e2dj7a8Qym5YiWJBOfcLALNyAk41i9FMabdWKT8UZ1oXWZuhb2gvycOP1ERi1S/"
@@ -45,6 +48,7 @@ provider:
     APP_URL: ${self:custom.myEnvironment.APP_URL.${self:custom.myStage}}
     OMI_PK: ${self:custom.myEnvironment.OMI_PK.${self:custom.myStage}}
     POA_NETWORK: ${self:custom.myEnvironment.POA_NETWORK.${self:custom.myStage}}
+    SDK_ENV: ${self:custom.myEnvironment.SDK_ENV.${self:custom.myStage}}
 
   iamRoleStatements:
     - Effect: Allow

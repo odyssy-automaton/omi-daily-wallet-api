@@ -56,7 +56,7 @@ module.exports.redeem = async (event, context) => {
       process.env.POA_NETWORK
     );
 
-    const balance = await provider.getBalance(address);
+    const balance = await provider.getBalance(link.senderAddress);
     let etherString = ethers.utils.formatEther(balance);
 
     if (parseFloat(etherString) < parseFloat(link.amount)) {
