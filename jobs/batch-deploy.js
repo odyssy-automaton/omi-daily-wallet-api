@@ -13,6 +13,7 @@ const {
   SdkEnvironmentNames,
   createSdk
 } = require("@archanova/sdk");
+const { anyToHex } = require("@netgum/utils");
 const { addRecord } = require("../util/dyanamo-queries");
 
 module.exports.batchDeploy = async (event, context) => {
@@ -40,13 +41,17 @@ module.exports.batchDeploy = async (event, context) => {
       console.log(account);
 
       let gasPrice = 1000000000;
-      let gasLimit = 21000;
+      let gasLimit = 25000;
       let wei = ethers.utils.parseEther("0.01");
 
-      // const nonce = await guardian.getTransactionCount();
-      // console.log(nonce);
+      let nonce = await guardian.getTransactionCount();
+      console.log("nonce", nonce);
+      let nextNonce = "0x" + anyToHex(nonce + 1);
+      console.log("nextNonce", nextNonce);
       console.log("sending gas");
+
       await guardian.sendTransaction({
+        // nonce: nextNonce,
         gasLimit: gasLimit,
         gasPrice: gasPrice,
         to: account.address,
@@ -63,7 +68,7 @@ module.exports.batchDeploy = async (event, context) => {
 
       function wait() {
         return new Promise((resolve, reject) => {
-          setTimeout(() => resolve("hola"), 1500);
+          setTimeout(() => resolve("hola"), 15000);
         });
       }
 
@@ -87,7 +92,11 @@ module.exports.batchDeploy = async (event, context) => {
       console.log("adding record");
       await addRecord(newAccountParams);
     }
+
+    console.log("complete");
+    process.exit();
   } catch (err) {
     console.log(err);
+    process.exit();
   }
 };

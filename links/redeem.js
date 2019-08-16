@@ -1,8 +1,7 @@
 "use strict";
 
-const AWS = require("aws-sdk");
-
 ///remove before DEPLOY
+// const AWS = require("aws-sdk");
 // var credentials = new AWS.SharedIniFileCredentials({ profile: "default" });
 // AWS.config.credentials = credentials;
 // AWS.config.update({ region: "us-east-1" });

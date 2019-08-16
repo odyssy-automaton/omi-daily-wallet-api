@@ -31,14 +31,20 @@ const connect = async () => {
     for (let i = 0; i <= allAccounts.length; i++) {
       const account = await sdk.connectAccount(allAccounts[0].accountAddress);
 
+      console.log("account");
+      console.log(account.address);
+      console.log(account.state);
+
       if (account.state !== "Deployed") {
-        console.log("account");
-        console.log(account.address);
-        console.log(account.state);
+        console.log("*******************************");
       }
     }
+
+    console.log("complete");
+    process.exit();
   } catch (err) {
     console.log(err);
+    process.exit();
   }
 };
 
