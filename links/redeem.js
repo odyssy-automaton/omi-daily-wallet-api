@@ -52,12 +52,20 @@ module.exports.redeem = async (event, context) => {
       throw "link already redeemed";
     }
 
-    const guardianPK = await omiPrivateKey();
     const provider = new ethers.providers.JsonRpcProvider(
-      "https://sokol.poa.network/"
+      process.env.POA_NETWORK
     );
+
+    const balance = await provider.getBalance(link.senderAddress);
+    let etherString = ethers.utils.formatEther(balance);
+
+    if (parseFloat(etherString) < parseFloat(link.amount)) {
+      throw "sender balance is too low";
+    }
+
+    const guardianPK = await omiPrivateKey();
     const guardian = new ethers.Wallet(guardianPK, provider);
-    const sdkEnv = getSdkEnvironment(SdkEnvironmentNames.Sokol);
+    const sdkEnv = getSdkEnvironment(SdkEnvironmentNames[process.env.SDK_ENV]);
     const sdk = new createSdk(sdkEnv);
 
     await sdk.initialize({ device: { privateKey: guardianPK } });
@@ -179,6 +187,11 @@ module.exports.redeem = async (event, context) => {
     }
   } catch (err) {
     console.log(err);
+
+    if (typeof err !== "string") {
+      err = "something went very wrong. probably the blockchain";
+    }
+
     return {
       statusCode: 400,
       headers: {
