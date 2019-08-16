@@ -1,10 +1,11 @@
 "use strict";
 
+const AWS = require("aws-sdk");
+
 ///remove before DEPLOY
-// const AWS = require("aws-sdk");
-// var credentials = new AWS.SharedIniFileCredentials({ profile: "default" });
-// AWS.config.credentials = credentials;
-// AWS.config.update({ region: "us-east-1" });
+var credentials = new AWS.SharedIniFileCredentials({ profile: "default" });
+AWS.config.credentials = credentials;
+AWS.config.update({ region: "us-east-1" });
 
 const {
   SdkEnvironmentNames,
@@ -104,7 +105,8 @@ module.exports.redeem = async (event, context) => {
     } else {
       const senderAccount = await sdk.connectAccount(link.senderAddress);
       // TODO: const hasBalance = senderAccount.balance.real >= link.amount;
-      console.log("senderAccount", senderAccount.address);
+
+      console.log(senderAccount);
 
       if (senderAccount.state !== "Deployed") {
         throw "Account not deployed";
@@ -115,12 +117,13 @@ module.exports.redeem = async (event, context) => {
         throw "sender balance too low";
       }
 
-      console.log("estimating");
       const estimate = await sdk.estimateAccountTransaction(
         reqData.redeemAddress,
         ethToWei(link.amount),
         null
       );
+
+      console.log("estimate", estimate);
 
       let gasPrice = 1000000000;
       let gasLimit = 25000;
@@ -134,48 +137,40 @@ module.exports.redeem = async (event, context) => {
         value: wei
       });
 
-      function wait() {
-        return new Promise((resolve, reject) => {
-          setTimeout(() => resolve("hola"), 6000);
-        });
-      }
+      setTimeout(async () => {
+        console.log("sending tx");
+        const txRes = await sdk.submitAccountTransaction(estimate);
 
-      console.log("waiting");
-      await wait();
+        console.log("txRes", txRes);
 
-      console.log("starting tx");
-      const txRes = await sdk.submitAccountTransaction(estimate);
-      console.log("txRes", txRes);
+        const updateParams = {
+          TableName: process.env.DYNAMODB_TABLE,
+          Key: {
+            linkId: reqData.linkId
+          },
+          ExpressionAttributeValues: {
+            ":redeemed": true,
+            ":redeemAddress": reqData.redeemAddress,
+            ":txHash": txRes,
+            ":updatedAt": timestamp
+          },
+          UpdateExpression: `SET redeemed = :redeemed, redeemAddress = :redeemAddress, txHash = :txHash, updatedAt = :updatedAt`,
+          ReturnValues: "ALL_NEW"
+        };
 
-      const updateParams = {
-        TableName: process.env.DYNAMODB_TABLE,
-        Key: {
-          linkId: reqData.linkId
-        },
-        ExpressionAttributeValues: {
-          ":redeemed": true,
-          ":redeemAddress": reqData.redeemAddress,
-          ":txHash": txRes,
-          ":updatedAt": timestamp
-        },
-        UpdateExpression: `SET redeemed = :redeemed, redeemAddress = :redeemAddress, txHash = :txHash, updatedAt = :updatedAt`,
-        ReturnValues: "ALL_NEW"
-      };
+        await updateRecord(updateParams);
 
-      console.log("updating record");
-      await updateRecord(updateParams);
-
-      console.log("returning");
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": process.env.ORIGIN
-        },
-        body: JSON.stringify({
-          success: "transaction started"
-        })
-      };
+        return {
+          statusCode: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": process.env.ORIGIN
+          },
+          body: JSON.stringify({
+            success: "transaction started"
+          })
+        };
+      }, 6000);
     }
   } catch (err) {
     console.log(err);

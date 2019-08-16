@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const AWS = require("aws-sdk");
 var credentials = new AWS.SharedIniFileCredentials({ profile: "default" });
 AWS.config.credentials = credentials;
@@ -12,6 +13,7 @@ const {
   SdkEnvironmentNames,
   createSdk
 } = require("@archanova/sdk");
+const { anyToHex } = require("@netgum/utils");
 const { addRecord } = require("../util/dyanamo-queries");
 
 module.exports.batchDeploy = async (event, context) => {
@@ -34,28 +36,22 @@ module.exports.batchDeploy = async (event, context) => {
 
     for (let count = 0; count < event.count; count++) {
       await sdk.initialize({ device: { privateKey: guardianPK } });
+      console.log("creating account");
       let account = await sdk.createAccount();
       console.log(account);
 
-      const newAccountParams = {
-        TableName: process.env.DYNAMODB_ACCOUNT_TABLE,
-        Item: {
-          accountAddress: account.address,
-          appDeviceId: "0x0",
-          claimed: false,
-          createdAt: timestamp
-        }
-      };
-
-      await addRecord(newAccountParams);
-
       let gasPrice = 1000000000;
-      let gasLimit = 21000;
+      let gasLimit = 25000;
       let wei = ethers.utils.parseEther("0.01");
 
-      // const nonce = await guardian.getTransactionCount();
-      // console.log(nonce);
+      let nonce = await guardian.getTransactionCount();
+      console.log("nonce", nonce);
+      let nextNonce = "0x" + anyToHex(nonce + 1);
+      console.log("nextNonce", nextNonce);
+      console.log("sending gas");
+
       await guardian.sendTransaction({
+        // nonce: nextNonce,
         gasLimit: gasLimit,
         gasPrice: gasPrice,
         to: account.address,
@@ -70,21 +66,37 @@ module.exports.batchDeploy = async (event, context) => {
         JSON.stringify(output)
       );
 
-      setTimeout(async () => {
-        await sdk.deployAccount(estimate);
-        console.log("deployed", account.address);
-      }, 15000);
+      function wait() {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => resolve("hola"), 15000);
+        });
+      }
+
+      console.log("waiting");
+      await wait();
+
+      console.log("deploying");
+      await sdk.deployAccount(estimate);
+      console.log("deployed", account.address);
+
+      const newAccountParams = {
+        TableName: process.env.DYNAMODB_ACCOUNT_TABLE,
+        Item: {
+          accountAddress: account.address,
+          appDeviceId: "0x0",
+          claimed: false,
+          createdAt: timestamp
+        }
+      };
+
+      console.log("adding record");
+      await addRecord(newAccountParams);
     }
 
-    return {
-      statusCode: 200,
-      body: "ok"
-    };
+    console.log("complete");
+    process.exit();
   } catch (err) {
     console.log(err);
-    return {
-      statusCode: 400,
-      body: err
-    };
+    process.exit();
   }
 };

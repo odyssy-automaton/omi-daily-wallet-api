@@ -70,7 +70,6 @@ functions:
           path: links/get/{linkId}
           method: get
           cors: true
-
   redeem:
     handler: links/redeem.redeem
     events:
