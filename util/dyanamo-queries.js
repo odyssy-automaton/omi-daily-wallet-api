@@ -76,6 +76,23 @@ const updateRecord = function(params) {
   });
 };
 
+const getAllAccounts = function() {
+  const params = {
+    TableName: process.env.DYNAMODB_ACCOUNT_TABLE
+  };
+
+  return new Promise((res, rej) => {
+    dynamoDb.scan(params, function(err, data) {
+      if (err) {
+        console.log("Error", err);
+        rej(err);
+      } else {
+        res(data);
+      }
+    });
+  });
+};
+
 const getUnclaimedAccounts = function() {
   const params = {
     TableName: process.env.DYNAMODB_ACCOUNT_TABLE,
@@ -130,6 +147,7 @@ module.exports = {
   getLinkById,
   addRecord,
   updateRecord,
+  getAllAccounts,
   getUnclaimedAccounts,
   getClaimedAccounts
 };

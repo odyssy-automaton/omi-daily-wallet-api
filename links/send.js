@@ -37,43 +37,38 @@ module.exports.send = async (event, context) => {
 
     // const canSend = senderAccount && senderAccount.balance.real >= reqData.amount;
     // need to figure out the comparison
+    // senderAccount won't connect on omi airdrop links
+    // maybe just do this on the FE
     const canSend = true;
 
-    if (canSend) {
-      const linkId = await uuidRand();
-
-      const newLinkParams = {
-        TableName: process.env.DYNAMODB_TABLE,
-        Item: {
-          linkId,
-          url: `${process.env.APP_URL}?id=${linkId}`,
-          senderAddress: reqData.senderAddress,
-          amount: reqData.amount,
-          redeemed: false,
-          createdAt: timestamp
-        }
-      };
-
-      await addRecord(newLinkParams);
-
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": process.env.ORIGIN
-        },
-        body: JSON.stringify(newLinkParams.Item)
-      };
-    } else {
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": process.env.ORIGIN
-        },
-        body: JSON.stringify({ error: "Balance is less than send amount" })
-      };
+    if (!canSend) {
+      throw "Balance is less than send amount";
     }
+
+    const linkId = await uuidRand();
+
+    const newLinkParams = {
+      TableName: process.env.DYNAMODB_TABLE,
+      Item: {
+        linkId,
+        url: `${process.env.APP_URL}?id=${linkId}`,
+        senderAddress: senderAccount.address,
+        amount: reqData.amount,
+        redeemed: false,
+        createdAt: timestamp
+      }
+    };
+
+    await addRecord(newLinkParams);
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": process.env.ORIGIN
+      },
+      body: JSON.stringify(newLinkParams.Item)
+    };
   } catch (err) {
     console.log(err);
     return {
