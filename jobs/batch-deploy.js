@@ -16,7 +16,7 @@ const {
 const { anyToHex } = require("@netgum/utils");
 const { addRecord } = require("../util/dyanamo-queries");
 
-module.exports.batchDeploy = async (event, context) => {
+const batchDeploy = async count => {
   const timestamp = new Date().getTime();
   let output = [];
 
@@ -32,9 +32,11 @@ module.exports.batchDeploy = async (event, context) => {
       process.env.POA_NETWORK
     );
     const guardian = new ethers.Wallet(guardianPK, provider);
-    const sdk = createSdk(getSdkEnvironment(SdkEnvironmentNames[process.env.SDK_ENV]));
+    const sdk = createSdk(
+      getSdkEnvironment(SdkEnvironmentNames[process.env.SDK_ENV])
+    );
 
-    for (let count = 0; count < event.count; count++) {
+    for (let i = 0; i <= count; i++) {
       await sdk.initialize({ device: { privateKey: guardianPK } });
       console.log("creating account");
       let account = await sdk.createAccount();
@@ -100,3 +102,5 @@ module.exports.batchDeploy = async (event, context) => {
     process.exit();
   }
 };
+
+batchDeploy(10);

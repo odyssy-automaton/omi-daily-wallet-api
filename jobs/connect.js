@@ -12,12 +12,16 @@ AWS.config.credentials = credentials;
 AWS.config.update({ region: "us-east-1" });
 const kms = new AWS.KMS();
 
-const { getAllAccounts } = require("../util/dyanamo-queries");
+const {
+  getAllAccounts,
+  getUnclaimedAccounts
+} = require("../util/dyanamo-queries");
 
 const connect = async () => {
   const sdk = createSdk(getSdkEnvironment(SdkEnvironmentNames.Sokol));
   try {
-    const res = await getAllAccounts();
+    // const res = await getAllAccounts();
+    const res = await getUnclaimedAccounts();
     const allAccounts = res.Items;
 
     const decryptedData = await kms
