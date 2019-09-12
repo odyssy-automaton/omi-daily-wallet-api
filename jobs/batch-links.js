@@ -10,7 +10,7 @@ const batchLinks = async count => {
   try {
     let req = {
       body: JSON.stringify({
-        amount: ".1",
+        amount: ".25",
         senderAddress: process.env.OMI_ADDRESS
       })
     };
@@ -26,4 +26,4 @@ const batchLinks = async count => {
   }
 };
 
-batchLinks(10);
+batchLinks(15);

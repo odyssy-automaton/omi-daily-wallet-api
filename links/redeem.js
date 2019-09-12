@@ -111,17 +111,18 @@ module.exports.redeem = async (event, context) => {
       };
     } else {
       const senderAccount = await sdk.connectAccount(link.senderAddress);
-      // TODO: const hasBalance = senderAccount.balance.real >= link.amount;
       console.log("senderAccount", senderAccount.address);
-
+      
       if (senderAccount.state !== "Deployed") {
         throw "Account not deployed";
       }
-      const hasBalance = true;
+      
+      // TODO: const hasBalance = senderAccount.balance.real >= link.amount;
+      // const hasBalance = true;
 
-      if (!hasBalance) {
-        throw "sender balance too low";
-      }
+      // if (!hasBalance) {
+      //   throw "sender balance too low";
+      // }
 
       console.log("estimating");
       const estimate = await sdk.estimateAccountTransaction(
