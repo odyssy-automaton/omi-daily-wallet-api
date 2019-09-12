@@ -36,7 +36,7 @@ const batchDeploy = async count => {
       getSdkEnvironment(SdkEnvironmentNames[process.env.SDK_ENV])
     );
 
-    for (let i = 0; i <= count; i++) {
+    for (let i = 0; i < count; i++) {
       await sdk.initialize({ device: { privateKey: guardianPK } });
       console.log("creating account");
       let account = await sdk.createAccount();
@@ -44,7 +44,7 @@ const batchDeploy = async count => {
 
       let gasPrice = 1000000000;
       let gasLimit = 25000;
-      let wei = ethers.utils.parseEther("0.005");
+      let wei = ethers.utils.parseEther("0.01");
 
       let nonce = await guardian.getTransactionCount();
       console.log("nonce", nonce);
@@ -103,4 +103,4 @@ const batchDeploy = async count => {
   }
 };
 
-batchDeploy(100);
+batchDeploy(15);
