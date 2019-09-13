@@ -44,7 +44,7 @@ const batchDeploy = async count => {
 
       let gasPrice = 1000000000;
       let gasLimit = 25000;
-      let wei = ethers.utils.parseEther("0.01");
+      let wei = ethers.utils.parseEther("0.009");
 
       let nonce = await guardian.getTransactionCount();
       console.log("nonce", nonce);

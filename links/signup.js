@@ -67,7 +67,17 @@ module.exports.signup = async (event, context) => {
         const deviceRes = await sdk.createAccountDevice(
           reqData.userDeviceAddress
         );
-        console.log(deviceRes);
+        console.log("deviceRes", deviceRes);
+
+        const deploymentEstimate = await sdk.estimateAccountDeviceDeployment(
+          reqData.userDeviceAddress
+        );
+        console.log("deploymentEstimate", deploymentEstimate);
+
+        const deployHash = await sdk.submitAccountTransaction(
+          deploymentEstimate
+        );
+        console.log("deployHash", deployHash);
 
         const updateParams = {
           TableName: process.env.DYNAMODB_ACCOUNT_TABLE,
