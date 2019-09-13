@@ -2,16 +2,16 @@ service:
   name: daily-wallet-api
   awsKmsKeyArn: "arn:aws:kms:us-east-1:947598263436:key/bb08c235-5160-4745-bc4e-9c37aa991255"
 
-plugins:
-  - serverless-plugin-include-dependencies
+# plugins:
+#   - serverless-plugin-include-dependencies
 
 package:
-  excludeDevDependencies: false
+  excludeDevDependencies: true
   exclude:
     - test/**
     - jobs/**
     - addresses/**
-    - node_modules/**
+    # - node_modules/**
 
 custom:
   myStage: ${opt:stage, self:provider.stage}
