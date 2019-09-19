@@ -59,6 +59,10 @@ module.exports.redeem = async (event, context) => {
     const balance = await provider.getBalance(link.senderAddress);
     let etherString = ethers.utils.formatEther(balance);
 
+    console.log("balance", balance);
+    console.log("etherString", etherString);
+    console.log("link.amount", link.amount);
+
     if (parseFloat(etherString) < parseFloat(link.amount)) {
       throw "sender balance is too low";
     }
@@ -112,11 +116,11 @@ module.exports.redeem = async (event, context) => {
     } else {
       const senderAccount = await sdk.connectAccount(link.senderAddress);
       console.log("senderAccount", senderAccount.address);
-      
+
       if (senderAccount.state !== "Deployed") {
         throw "Account not deployed";
       }
-      
+
       // TODO: const hasBalance = senderAccount.balance.real >= link.amount;
       // const hasBalance = true;
 
