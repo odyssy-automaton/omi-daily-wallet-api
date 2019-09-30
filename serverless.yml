@@ -23,7 +23,7 @@ custom:
       prod: "0x962E624dCfA8CfB220015A5292C15d4006c42a85"
       dev: "0x962E624dCfA8CfB220015A5292C15d4006c42a85"
     APP_URL:
-      prod: "https://omi-daily-wallet.odyssy.io/"
+      prod: "https://payment.dailywallet.org/"
       dev: "https://quirky-davinci-4da258.netlify.com/"
     POA_NETWORK:
       prod: "https://dai.poa.network/"
